@@ -1,0 +1,6 @@
+
+SQL_USERNAME = "my_username"
+SQL_PASSWORD = "my_password"
+
+CONNECTION_STRING = 'postgresql+psycopg2://{}:{}@freegenes-openfoundry.cwtlxuukykrr.us-east-1.rds.amazonaws.com:5432/openfoundry'.format(SQL_USERNAME,SQL_ PASSWORD)
+

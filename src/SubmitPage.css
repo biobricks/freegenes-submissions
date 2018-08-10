@@ -1,0 +1,10 @@
+.SubmitPage {
+  position: relative;
+  display: block;
+  min-height: 100vh;
+  padding: 12px;  
+}
+
+form {
+  width: 100%;
+}

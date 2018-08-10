@@ -1,0 +1,27 @@
+.StatusPage {
+  position: relative;
+  display: block;
+  min-height: 100vh;
+  padding: 12px;  
+}
+
+.StatusPage .panel-block {
+  padding: 12px;
+}
+
+.StatusPage label {
+  position: relative;
+  display: block;
+  float: left;
+  width: 90px;
+  margin-right: 8px;  
+  text-align: right; 
+}
+
+.StatusPage .columns.is-multiline .column {
+  margin-top: 4px;
+}
+
+.StatusPage .column.sequence {
+  word-break: break-all;
+}
