@@ -32,6 +32,7 @@ class SubmitPage extends Component {
     super(props);
     this.state = {
       error: undefined,
+      fileMsg: undefined,
       sequence: undefined,
       form: {
         submissionType: 'single',
@@ -100,7 +101,8 @@ class SubmitPage extends Component {
     e.preventDefault();
 
     this.setState({
-      error: null
+      error: null,
+      fileMsg: null
     });
 
     var files = e.target.files;
@@ -146,7 +148,8 @@ class SubmitPage extends Component {
           sequence: {
             name: res.parsedSequence.name,
             sequence: res.parsedSequence.sequence
-          }
+          },
+          fileMsg: "GenBank file selected"
         });
 
       }.bind(this));
@@ -162,6 +165,15 @@ class SubmitPage extends Component {
       error = (
         <div style={{color:'red', fontWeight:'bold'}}>
           <p>{this.state.error}</p>
+        </div>
+      );
+    }
+
+    var fileMsg = '';
+    if(this.state.fileMsg) {
+      fileMsg = (
+        <div style={{color:'green', fontWeight:'bold'}}>
+          <p>{this.state.fileMsg}</p>
         </div>
       );
     }
@@ -347,6 +359,7 @@ class SubmitPage extends Component {
                            </label>
                          </div>
                         </div>
+                        {fileMsg}
                       </div>
                     </div>
                   ) : (
