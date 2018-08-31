@@ -3,6 +3,7 @@ import { Switch, Route } from 'react-router-dom';
 
 import LandingPage from './LandingPage';
 import SubmitPage from './SubmitPage';
+import ListPage from './ListPage';
 import StatusPage from './StatusPage';
 
 class Router extends Component {
@@ -23,6 +24,14 @@ class Router extends Component {
         />
       );
     };
+    const listPage = (props) => {
+      return (
+        <ListPage 
+          {...props}
+          {...this.props}
+        />
+      );
+    };
     const statusPage = (props) => {
       return (
         <StatusPage 
@@ -36,6 +45,7 @@ class Router extends Component {
         <Switch>
           <Route exact path='/' component={landingPage}/>
           <Route exact path='/submit' component={submitPage}/>
+          <Route exact path='/list' component={listPage}/>
           <Route exact path='/status' component={statusPage}/>
         </Switch>
       </main>

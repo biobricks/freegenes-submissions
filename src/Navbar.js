@@ -21,6 +21,9 @@ class Navbar extends Component {
               <Link className="navbar-item " to="/submit">
                 Submit
               </Link> 
+              <Link className="navbar-item " to="/list">
+                List
+              </Link> 
               <Link className="navbar-item " to="/status">
                 Status
               </Link>    

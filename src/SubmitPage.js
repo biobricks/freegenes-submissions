@@ -33,9 +33,12 @@ class SubmitPage extends Component {
     this.state = {
       error: undefined,
       fileMsg: undefined,
-      sequence: undefined,
+      submissionType: 'single',
+      sequence: {
+        description: ''
+      }
+/*
       form: {
-        submissionType: 'single',
         name: '',
         email: '',
         partType: '',
@@ -46,14 +49,31 @@ class SubmitPage extends Component {
         genbankZip: '',
         csvFile: ''
       }
+*/
     };
-    this.onChangeField = this.onChangeField.bind(this);
+//    this.onChangeField = this.onChangeField.bind(this);
   }
 
-  onChangeField(e) {
-    let form = this.state.form;
-    form[e.target.name] = e.target.value;
-    this.setState({ form });
+  onChangeType(e) {
+    this.setState({
+      submissionType: e.target.value
+    });
+  }
+
+  setDescription(e) {
+    var seq = this.state.sequence;
+    seq.description = e.target.value;
+    this.setState({
+      sequence: seq
+    });    
+  }
+
+  setName(e) {
+    var seq = this.state.sequence;
+    seq.name = e.target.value;
+    this.setState({
+      sequence: seq
+    });    
   }
 
   submit(e) {
@@ -61,9 +81,44 @@ class SubmitPage extends Component {
     
     var data = serialize(e.target);
 
-    console.log("DATA:", data);
+    data.genbankData = this.state.genbankData;
 
-    data.geneID = this.state.sequence.name;
+    fetch('/submit', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: {
+        "Content-Type": "application/json; charset=utf-8"
+      },
+    }).then(function(resp) {
+      return resp.json();
+    }).then(function(data) {
+      if(data.error) {
+        this.setState({
+          error: data.error.toString()
+        });
+        return
+      }
+      this.setState({
+        error: null
+      });
+
+      console.log("Got:", data);
+      if(data.status === 'success') {
+        alert("Request successfully submitted!");
+      }
+
+    }.bind(this)).catch(function(err) {
+      this.setState({
+        error: err.toString()
+      });
+    }.bind(this));
+  }
+
+  submit_check(e) {
+    e.preventDefault();
+    
+    var data = serialize(e.target);
+
     data.sequence = this.state.sequence.sequence;
 
     fetch('/check-seq', {
@@ -77,7 +132,7 @@ class SubmitPage extends Component {
     }).then(function(data) {
       if(data.error) {
         this.setState({
-          error: data.error
+          error: data.error.toString()
         });
         return
       }
@@ -91,9 +146,19 @@ class SubmitPage extends Component {
 
     }.bind(this)).catch(function(err) {
       this.setState({
-        error: err
+        error: err.toString()
       });
     }.bind(this));
+  }
+
+  selectFileCSV(e) {
+    e.stopPropagation();
+    e.preventDefault();
+  }
+
+  selectFileZip(e) {
+    e.stopPropagation();
+    e.preventDefault();
   }
 
   selectFile(e) {
@@ -112,6 +177,10 @@ class SubmitPage extends Component {
 
     reader.onload = function(e) {
       var data = e.target.result;
+
+      this.setState({
+        genbankData: data
+      });
 
       genbankToJson(data, function(res) {
         if(!res.length) {
@@ -147,10 +216,13 @@ class SubmitPage extends Component {
         this.setState({
           sequence: {
             name: res.parsedSequence.name,
+            description: res.parsedSequence.definition || this.state.sequence.description || '',
             sequence: res.parsedSequence.sequence
           },
           fileMsg: "GenBank file selected"
         });
+
+        console.log(this.state)
 
       }.bind(this));
     }.bind(this);
@@ -183,7 +255,7 @@ class SubmitPage extends Component {
         <div className="columns">
           <div className="column is-12-mobile is-6 desktop">
             <div className="panel">
-              {(this.state.form.submissionType === 'single') ? (
+              {(this.state.submissionType === 'single') ? (
                 <div className="panel-heading">
                   Submit Single
                 </div>
@@ -199,58 +271,109 @@ class SubmitPage extends Component {
                     <label className="label">Submission Type</label>
                     <div className="control">
                       <label className="radio">
-                        {(this.state.form.submissionType === 'single') ? (
                           <div>
                             <input 
                               type="radio" 
                               name="submissionType" 
-                              checked={true} 
+                              checked={!!(this.state.submissionType === 'single')}
                               value="single"
-                              onChange={this.onChangeField}
+                              onChange={this.onChangeType.bind(this)}
                             />&nbsp;Single
                           </div>
-                        ) : (
-                          <div>
-                            <input 
-                              type="radio" 
-                              name="submissionType" 
-                              value="bulk"
-                              onChange={this.onChangeField}
-                            />&nbsp;Single
-                          </div>
-                        )} 
+
                       </label>
                       <label className="radio">
-                        {(this.state.form.submissionType === 'bulk') ? (
                           <div>
                             <input 
                               type="radio" 
                               name="submissionType" 
-                              checked={true} 
+                              checked={!!(this.state.submissionType === 'bulk')}
                               value="bulk"
-                              onChange={this.onChangeField}
+                              onChange={this.onChangeType.bind(this)}
                             />&nbsp;Bulk
                           </div>
-                        ) : (
-                          <div>
-                            <input 
-                              type="radio" 
-                              name="submissionType" 
-                              value="bulk"
-                              onChange={this.onChangeField}
-                            />&nbsp;Bulk
-                          </div>
-                        )}
                       </label>
                     </div>  
-                  </div>                    
+                  </div>    
+                  {(this.state.submissionType === 'single') ? (
+                      <div className="field">
+                        <label className="label">Genbank File</label>
+                        <div className="control">
+                          <div class="file">
+                            <label class="file-label">
+                              <input class="file-input" type="file" name="file" onChange={this.selectFile.bind(this)} />
+                              <span class="file-cta">
+                                <span class="file-icon">
+                                  <i class="fas fa-upload"></i>
+                                </span>
+                               <span class="file-label">
+                                 Choose a file…
+                               </span>
+                             </span>
+                           </label>
+                         </div>
+                        </div>
+                        {fileMsg}
+                      </div> 
+                      ) : (
+                    <div>
+                      <div className="field">
+                        <label className="label">CSV File</label>
+                        <div className="control">
+                          <div class="file">
+                            <label class="file-label">
+                              <input class="file-input" type="file" name="file" onChange={this.selectFileCSV.bind(this)} />
+                              <span class="file-cta">
+                                <span class="file-icon">
+                                  <i class="fas fa-upload"></i>
+                                </span>
+                               <span class="file-label">
+                                 Choose a file…
+                               </span>
+                             </span>
+                           </label>
+                         </div>
+                        </div>
+                      </div>
+                      <div className="field">
+                        <label className="label">Genbank Zip</label>
+                        <div className="control">
+                          <div class="file">
+                            <label class="file-label">
+                              <input class="file-input" type="file" name="file" onChange={this.selectFileZip.bind(this)} />
+                              <span class="file-cta">
+                                <span class="file-icon">
+                                  <i class="fas fa-upload"></i>
+                                </span>
+                               <span class="file-label">
+                                 Choose a file…
+                               </span>
+                             </span>
+                           </label>
+                         </div>
+                        </div>
+                      </div>
+                    </div> 
+                      )}
+                      <div className="field">
+                        <label className="label">Part name:</label>
+                        <div className="control">
+                          <textarea className="textarea" name="name" placeholder="Part name." onChange={this.setName.bind(this)} value={this.state.sequence.name}></textarea>
+                        </div>
+                      </div>
+                      <div className="field">
+                        <label className="label">Part description:</label>
+                        <div className="control">
+                          <textarea className="textarea" name="description" placeholder="A short description." onChange={this.setDescription.bind(this)} value={this.state.sequence.description}></textarea>
+                        </div>
+                      </div>
                   <div className="field">
-                    <label className="label">Name</label>
+                    <label className="label">Your name</label>
                     <div className="control has-icons-left">
                       <input 
                         className="input" 
                         type="text" 
-                        name="name"
+                        name="submittername"
                         placeholder="Your Name"
                       />
                       <span className="icon is-small is-left">
@@ -273,13 +396,13 @@ class SubmitPage extends Component {
                     </div>
                   </div>
 
-                  {(this.state.form.submissionType === 'single') ? (
-                    <div>
+                  {(this.state.submissionType === 'single') ? (
+                    <div> 
                       <div className="field">
                         <label className="label">Part Type</label>
                         <div className="control">
                           <label className="radio">
-                            <input type="radio" name="partType" value="prokaryotic promoter" />
+                            <input type="radio" name="partType" value="prokaryotic-promoter" />
                             &nbsp;Prokaryotic Promoter
                           </label><br/>
                           <label className="radio">
@@ -287,12 +410,12 @@ class SubmitPage extends Component {
                             &nbsp;RBS
                           </label><br/>
                           <label className="radio">
-                            <input type="radio" name="partType" value="eukaryotic promoter" />
+                            <input type="radio" name="partType" value="eukaryotic-promoter" />
                             &nbsp;Eukaryotic Promoter
                           </label><br/>
                           <label className="radio">
-                            <input type="radio" name="partType" value="cds" />
-                            &nbsp;CDS
+                            <input type="radio" name="partType" value="cds" checked="checked" />
+                            &nbsp;Coding Sequence
                           </label><br/>
                           <label className="radio">
                             <input type="radio" name="partType" value="terminator" />
@@ -309,19 +432,26 @@ class SubmitPage extends Component {
                         </div>
                       </div>
                       <div className="field">
-                        <label className="label">Description</label>
+                        <label className="label">Can we modify codons to avoid synthesis problems?</label>
                         <div className="control">
-                          <textarea className="textarea" name="description" placeholder="A short description."></textarea>
+                          <label className="radio">
+                            <input type="radio" name="codonChange" value="ok" checked="checked"/>
+                            &nbsp;Yes
+                          </label><br/>
+                          <label className="radio">
+                            <input type="radio" name="codonChange" value="not-ok" />
+                            &nbsp;No. Do not modify the DNA sequence.
+                          </label><br/>
                         </div>
                       </div>
                       <div className="field">
-                        <label className="label">Links</label>
+                        <label className="label">Link</label>
                         <div className="control has-icons-left">
                           <input 
                             className="input" 
                             type="text" 
-                            name="links"
-                            placeholder="Links"
+                            name="link"
+                            placeholder="Link"
                           />
                           <span className="icon is-small is-left">
                             <i className="mdi mdi-link"></i>
@@ -342,42 +472,8 @@ class SubmitPage extends Component {
                           </span>
                         </div>
                       </div>
-                      <div className="field">
-                        <label className="label">Genbank File</label>
-                        <div className="control">
-                          <div class="file">
-                            <label class="file-label">
-                              <input class="file-input" type="file" name="file" onChange={this.selectFile.bind(this)} />
-                              <span class="file-cta">
-                                <span class="file-icon">
-                                  <i class="fas fa-upload"></i>
-                                </span>
-                               <span class="file-label">
-                                 Choose a file…
-                               </span>
-                             </span>
-                           </label>
-                         </div>
-                        </div>
-                        {fileMsg}
-                      </div>
                     </div>
-                  ) : (
-                    <div>
-                      <div className="field">
-                        <label className="label">CSV File</label>
-                        <div className="control">
-                          <button className="button is-primary">Upload File</button>
-                        </div>
-                      </div>
-                      <div className="field">
-                        <label className="label">Genbank Zip</label>
-                        <div className="control">
-                          <button className="button is-primary">Upload File</button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  ) : ('')}
 
                   <hr/>
                   {error}

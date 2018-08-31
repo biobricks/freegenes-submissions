@@ -6,7 +6,6 @@ from sqlalchemy.orm import sessionmaker,relationship
 import glob
 import json
 import pandas as pd
-from config import *
 from lib import mini_ot
 #import bionet
 

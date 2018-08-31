@@ -1,3 +1,4 @@
 biopython==1.71
 numpy==1.14.0
 SQLAlchemy==1.2.1
+sqlalchemy_fsm==2.0.6
